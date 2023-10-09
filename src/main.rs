@@ -1,17 +1,17 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, hash::Hash};
 
 pub struct Value {
     data: f32,
     grad: f32,
     _backward: Box<dyn FnMut()>,
     // _prev: HashSet<*const Value>,
-    _prev: (),
+    _prev: Vec<*mut Value>,
     _op: String,
     label: String,
 }
 
 impl Value {
-    pub fn new(data: f32, children: (), op: &str, label: &str) {
+    pub fn new(data: f32, children: Vec<*mut Value>, op: &str, label: &str) {
         let v = Value {
             data: data,
             grad: 0.0,
@@ -28,16 +28,24 @@ impl Value {
     }
 
     pub fn backward(&mut self) {
-        self.grad = 1.0;
+        let mut topo: Vec<&mut Value> = Vec::new();
+        let mut visited: HashSet<*mut Value> = HashSet::new();
 
-        let mut topo = Vec::new();
-        let mut visited = HashSet::new();
-
-        fn build_topo<'a>(v: &'a mut Value, topo: &mut Vec<&'a mut Value>, visited: &mut HashSet<*const Value>) {
-            if !visited.contains(&(v as *const _)) {
-                visited.insert(v as *const _);
-                // for child in v._prev.
+        fn build_topo(v: &mut Value, topo: &mut Vec<&mut Value>, visited: &mut HashSet<*mut Value>) {
+            if !visited.contains(&(v as *mut Value)) {
+                visited.insert(v as *mut Value);
+                for child in &mut v._prev {
+                    build_topo(child, topo, visited);
+                }
+                topo.push(v);
             }
+        }
+
+        build_topo(self, &mut topo, &mut visited);
+
+        self.grad = 1.0;
+        for node in topo.iter().rev() {
+            node._backward;
         }
     }
 }
