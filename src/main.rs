@@ -50,6 +50,27 @@ impl Value {
     }
 }
 
+impl Value {
+    pub fn add(&mut self, other: &mut Value) -> Value {
+        let mut out = Value{
+            data: self.data + other.data, 
+            grad: 0.0, 
+            _backward: Box::new(|| ()), 
+            _prev: vec![self, other],
+            _op: "+".to_string(), 
+            label: "+".to_string(),
+        };
+
+        let _backward = || {
+            self.grad += 1.0 * out.grad;
+            other.grad += 1.0 * out.grad;
+        };
+        out._backward = Box::new(_backward);
+
+        return out;
+    }
+}
+
 // impl Value {
 //     pub fn new(data: f32, children: Vec<&Value>, op: &str, label: &str) -> Self {
 //         let mut v = Value {
