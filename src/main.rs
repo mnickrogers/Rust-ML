@@ -23,6 +23,17 @@ impl Value {
         v;
     }
 
+    pub fn value(v: f32) -> Self {
+        Value {
+            data: v,
+            grad: 0.0,
+            _backward: Box::new(|| {}),
+            _prev: vec![],
+            _op: "".to_string(),
+            label: "".to_string()
+        }
+    }
+
     pub fn repr(&self) -> String {
         format!("Value(data={}", self.data)
     }
@@ -73,4 +84,11 @@ impl Value {
 
 fn main() {
     println!("Hello, world!");
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_add_function() {
+    }
 }
